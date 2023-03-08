@@ -1,6 +1,9 @@
 package com.beva.compose_playground_2.ui
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,24 +15,34 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import com.beva.compose_playground_2.MainViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
 
     val lazyListState = rememberLazyListState()
+
+    val scope = rememberCoroutineScope()
+
     var display by remember {
         mutableStateOf(true)
     }
@@ -40,6 +53,12 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
                 ListItem("Good $it", false)
             }
         )
+    }
+
+    val showButton by remember {
+        derivedStateOf {
+            lazyListState.firstVisibleItemIndex > 0
+        }
     }
 
 
@@ -150,8 +169,57 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
             }
         }
     }
+    AnimatedVisibility(
+        visible = showButton,
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        ScrollToTopButton(onClick = {
+            scope.launch {
+                lazyListState.animateScrollToItem(0)
+            }
+        }
+        )
+    }
 }
 
+
+@Composable
+fun ScrollToTopButton(onClick: () -> Unit) {
+
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .padding(bottom = 50.dp),
+    contentAlignment = Alignment.BottomCenter
+    ) {
+        Button(
+            onClick = { onClick() },
+            modifier = Modifier
+                .shadow(10.dp)
+                .clip(RectangleShape)
+                .size(160.dp, 90.dp)
+                .border(1.dp, Color.Black),
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = Color.Gray,
+                contentColor = Color.Black
+            )
+        ) {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "剩餘 50 項商品")
+                Spacer(modifier = Modifier.height(8.dp))
+                Icon(
+                    imageVector = Icons.Outlined.KeyboardArrowUp,
+                    contentDescription = "Back To Top"
+                )
+            }
+        }
+    }
+
+}
 
 fun LazyListScope.VerticalList(vm: MainViewModel, lc: LifecycleOwner) {
 
