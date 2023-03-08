@@ -34,8 +34,12 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
         mutableStateOf(true)
     }
 
-    val b by remember {
-        mutableStateOf(false)
+    val gridItems by remember {
+        mutableStateOf(
+            (1..100).map {
+                ListItem("Good $it", false)
+            }
+        )
     }
 
 
@@ -112,7 +116,39 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
             }
         }
 
-        if (!display) VerticalList(vm, lc) else GridsList()
+        if (!display) {
+            VerticalList(vm, lc)
+        } else {
+            items(gridItems.windowed(2,2,true)) {
+                Row(Modifier.fillMaxWidth()) {
+                    it.forEach { item ->
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxWidth(0.5f)
+                            .height(240.dp)
+                            .padding(horizontal = 8.dp)
+                            .padding(top = 16.dp)
+                            .border(1.dp, Color.Black),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = item.title)
+                        Icon(
+                            imageVector = Icons.Default.ThumbUp,
+                            contentDescription = "$item Like Button",
+                            tint = if (item.isSelected) Color.DarkGray else Color.LightGray,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(16.dp)
+                                .clickable {
+                                    item.isSelected = !item.isSelected
+                                    Log.d("like ", "${item.isSelected}")
+                                }
+                        )
+                    }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -147,26 +183,6 @@ fun LazyListScope.VerticalList(vm: MainViewModel, lc: LifecycleOwner) {
         }
     }
 }
-
-fun LazyListScope.GridsList() {
-
-    val listed = (1..100).map { "Good $it" }
-
-    items(listed.windowed(2,2,true)) {
-        Row(Modifier.fillMaxWidth()) {
-            it.forEach { item ->
-                Text(
-                    item, modifier = Modifier
-                        .height(120.dp)
-                        .padding(4.dp)
-                        .background(Color.Yellow)
-                        .fillParentMaxWidth(.5f)
-                )
-            }
-        }
-    }
-}
-
 
 
 @Composable
