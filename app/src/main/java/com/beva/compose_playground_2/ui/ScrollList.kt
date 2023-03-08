@@ -1,5 +1,6 @@
 package com.beva.compose_playground_2.ui
 
+import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -50,14 +51,18 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
     val gridItems by remember {
         mutableStateOf(
             (1..100).map {
-                ListItem("Good $it", false)
+                ListItem(it, false)
             }
         )
     }
 
+    var result by remember {
+        mutableStateOf(0)
+    }
+
     val showButton by remember {
         derivedStateOf {
-            lazyListState.firstVisibleItemIndex > 0
+            lazyListState.firstVisibleItemIndex > 2
         }
     }
 
@@ -136,9 +141,39 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
         }
 
         if (!display) {
-            VerticalList(vm, lc)
+            items(listOf(gridItems)) { items ->
+                Column(Modifier.fillMaxWidth()) {
+                    items.forEach {
+                        Box(modifier = Modifier
+                            .fillMaxWidth()
+                            .height(140.dp)
+                            .padding(horizontal = 8.dp)
+                            .padding(top = 16.dp)
+                            .border(1.dp, Color.Black),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "Good ${it.title}")
+                            Icon(
+                                imageVector = Icons.Default.ThumbUp,
+                                tint = if (it.isSelected) Color.Black else Color.LightGray,
+                                contentDescription = "Like Button",
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(16.dp)
+                                    .clickable {
+                                        it.isSelected = !it.isSelected
+                                    }
+                            )
+                            result = gridItems.size.minus(it.title)
+                            Log.d(TAG, "ScrollList: ${it.title}")
+                            Log.d(TAG, "ScrollList: $result")
+                        }
+                    }
+                }
+            }
+
         } else {
-            items(gridItems.windowed(2,2,true)) {
+            items(gridItems.windowed(2,1,true)) {
                 Row(Modifier.fillMaxWidth()) {
                     it.forEach { item ->
                     Box(
@@ -150,7 +185,7 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
                             .border(1.dp, Color.Black),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = item.title)
+                        Text(text = "Good ${item.title}")
                         Icon(
                             imageVector = Icons.Default.ThumbUp,
                             contentDescription = "$item Like Button",
@@ -160,9 +195,11 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
                                 .padding(16.dp)
                                 .clickable {
                                     item.isSelected = !item.isSelected
-                                    Log.d("like ", "${item.isSelected}")
                                 }
                         )
+                        result = gridItems.size.minus(item.title)
+                        Log.d(TAG, "ScrollList: ${item.title}")
+                        Log.d(TAG, "ScrollList: $result")
                     }
                     }
                 }
@@ -174,18 +211,19 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
         enter = fadeIn(),
         exit = fadeOut()
     ) {
-        ScrollToTopButton(onClick = {
+        ScrollToTopButton(result,onClick = {
             scope.launch {
                 lazyListState.animateScrollToItem(0)
+                }
             }
-        }
         )
     }
 }
 
 
 @Composable
-fun ScrollToTopButton(onClick: () -> Unit) {
+fun ScrollToTopButton(sum: Int , onClick: () -> Unit) {
+
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -209,7 +247,7 @@ fun ScrollToTopButton(onClick: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "剩餘 50 項商品")
+                Text(text = "剩餘 $sum 項商品")
                 Spacer(modifier = Modifier.height(8.dp))
                 Icon(
                     imageVector = Icons.Outlined.KeyboardArrowUp,
@@ -221,89 +259,7 @@ fun ScrollToTopButton(onClick: () -> Unit) {
 
 }
 
-fun LazyListScope.VerticalList(vm: MainViewModel, lc: LifecycleOwner) {
-
-    vm.items.observe(lc){ items ->
-
-        items(vm.getItemSize()) {
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp)
-                .padding(horizontal = 8.dp)
-                .padding(top = 16.dp)
-                .border(1.dp, Color.Black),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = items[it].title)
-                Icon(
-                    imageVector = Icons.Default.ThumbUp,
-                    tint = if (items[it].isSelected) Color.Black else Color.LightGray,
-                    contentDescription = "Like Button",
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                        .clickable {
-                            items[it].isSelected = !items[it].isSelected
-                            Log.d("selected", "${items[it].isSelected}")
-                        }
-                )
-            }
-        }
-    }
-}
-
-
-@Composable
-fun GridsScroll() {
-
-    var items by remember {
-        mutableStateOf(
-            (1..100).map {
-                ListItem("Good $it", false)
-            }
-        )
-    }
-
-    LazyVerticalGrid(
-        modifier = Modifier.padding(horizontal = 8.dp),
-        columns = GridCells.Fixed(2)
-    ) {
-        items(items.size) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.5f)
-                    .height(240.dp)
-                    .padding(horizontal = 8.dp)
-                    .padding(top = 16.dp)
-                    .border(1.dp, Color.Black),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = items[it].title)
-                Icon(
-                    imageVector = Icons.Default.ThumbUp,
-                    tint = if (items[it].isSelected) Color.Black else Color.LightGray,
-                    contentDescription = "Like Button",
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                        .clickable {
-                            items = items.mapIndexed { index, listItem ->
-                                if (it == index) {
-                                    listItem.copy(
-                                        isSelected = !listItem.isSelected
-                                    )
-                                } else {
-                                    listItem
-                                }
-                            }
-                        }
-                )
-            }
-        }
-    }
-}
-
 data class ListItem(
-    val title: String,
+    val title: Int,
     var isSelected: Boolean
 )

@@ -14,13 +14,18 @@ class MainViewModel: ViewModel() {
 
     init {
         _items.value = (1..100).map {
-            ListItem("Good $it", false)
+            ListItem(it, false)
         }
         Log.d("init", "${_items.value}")
     }
 
     fun getItemSize(): Int {
         return _items.value?.size ?: 0
+    }
+
+    fun getResultNumber(number: Int): Int {
+        Log.d("sum", "${_items.value?.size}")
+        return _items.value?.size?.minus(number) ?: 0
     }
 
     fun getBoolean(items: List<ListItem>, position: Int) {
