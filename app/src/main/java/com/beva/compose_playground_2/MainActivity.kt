@@ -13,20 +13,16 @@ import com.beva.compose_playground_2.ui.GridsScroll
 import com.beva.compose_playground_2.ui.theme.Compose_Playground_2Theme
 
 class MainActivity : ComponentActivity() {
+
+     lateinit var viewModel : MainViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel = MainViewModel()
         setContent {
             Compose_Playground_2Theme {
 
-                val scrollState = rememberScrollState()
+                    ScrollList(viewModel, this)
 
-                Column(modifier = Modifier
-                    .verticalScroll(scrollState)
-                    .fillMaxWidth()
-                    .height(1050.dp)) {
-                    ScrollList()
-                    GridsScroll()
-                }
             }
         }
     }

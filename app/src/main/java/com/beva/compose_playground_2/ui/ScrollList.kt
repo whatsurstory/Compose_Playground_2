@@ -1,13 +1,16 @@
 package com.beva.compose_playground_2.ui
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -19,12 +22,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LifecycleOwner
+import com.beva.compose_playground_2.MainViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ScrollList() {
+fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
 
     val lazyListState = rememberLazyListState()
+    var display by remember {
+        mutableStateOf(true)
+    }
+
+    val b by remember {
+        mutableStateOf(false)
+    }
+
 
     LazyColumn(
         modifier = Modifier
@@ -93,14 +106,68 @@ fun ScrollList() {
                         .align(Alignment.CenterEnd)
                         .padding(16.dp)
                         .clickable {
-
+                            display = !display
                         }
                 )
             }
         }
 
+        if (!display) VerticalList(vm, lc) else GridsList()
     }
 }
+
+
+fun LazyListScope.VerticalList(vm: MainViewModel, lc: LifecycleOwner) {
+
+    vm.items.observe(lc){ items ->
+
+        items(vm.getItemSize()) {
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp)
+                .padding(horizontal = 8.dp)
+                .padding(top = 16.dp)
+                .border(1.dp, Color.Black),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = items[it].title)
+                Icon(
+                    imageVector = Icons.Default.ThumbUp,
+                    tint = if (items[it].isSelected) Color.Black else Color.LightGray,
+                    contentDescription = "Like Button",
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                        .clickable {
+                            items[it].isSelected = !items[it].isSelected
+                            Log.d("selected", "${items[it].isSelected}")
+                        }
+                )
+            }
+        }
+    }
+}
+
+fun LazyListScope.GridsList() {
+
+    val listed = (1..100).map { "Good $it" }
+
+    items(listed.windowed(2,2,true)) {
+        Row(Modifier.fillMaxWidth()) {
+            it.forEach { item ->
+                Text(
+                    item, modifier = Modifier
+                        .height(120.dp)
+                        .padding(4.dp)
+                        .background(Color.Yellow)
+                        .fillParentMaxWidth(.5f)
+                )
+            }
+        }
+    }
+}
+
+
 
 @Composable
 fun GridsScroll() {
@@ -115,45 +182,44 @@ fun GridsScroll() {
 
     LazyVerticalGrid(
         modifier = Modifier.padding(horizontal = 8.dp),
-        columns = GridCells.Fixed(2),
-        content = {
-            items(items.size) {
-                Box(
+        columns = GridCells.Fixed(2)
+    ) {
+        items(items.size) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .height(240.dp)
+                    .padding(horizontal = 8.dp)
+                    .padding(top = 16.dp)
+                    .border(1.dp, Color.Black),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = items[it].title)
+                Icon(
+                    imageVector = Icons.Default.ThumbUp,
+                    tint = if (items[it].isSelected) Color.Black else Color.LightGray,
+                    contentDescription = "Like Button",
                     modifier = Modifier
-                        .fillMaxWidth(0.5f)
-                        .height(240.dp)
-                        .padding(horizontal = 8.dp)
-                        .padding(top = 16.dp)
-                        .border(1.dp, Color.Black),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = items[it].title)
-                    Icon(
-                        imageVector = Icons.Default.ThumbUp,
-                        tint = if (items[it].isSelected) Color.Black else Color.LightGray,
-                        contentDescription = "Like Button",
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(16.dp)
-                            .clickable {
-                                items = items.mapIndexed { index, listItem ->
-                                    if (it == index) {
-                                        listItem.copy(
-                                            isSelected = !listItem.isSelected
-                                        )
-                                    } else {
-                                        listItem
-                                    }
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                        .clickable {
+                            items = items.mapIndexed { index, listItem ->
+                                if (it == index) {
+                                    listItem.copy(
+                                        isSelected = !listItem.isSelected
+                                    )
+                                } else {
+                                    listItem
                                 }
                             }
-                    )
-                }
+                        }
+                )
             }
         }
-    )
+    }
 }
 
 data class ListItem(
     val title: String,
-    val isSelected: Boolean
+    var isSelected: Boolean
 )
