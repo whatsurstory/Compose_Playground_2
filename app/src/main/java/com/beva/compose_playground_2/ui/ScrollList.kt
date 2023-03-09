@@ -1,6 +1,5 @@
 package com.beva.compose_playground_2.ui
 
-import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -11,9 +10,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Button
@@ -32,13 +28,13 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LifecycleOwner
-import com.beva.compose_playground_2.MainViewModel
 import kotlinx.coroutines.launch
+
+const val TAG = "Beva"
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
+fun ScrollList() {
 
     val lazyListState = rememberLazyListState()
 
@@ -48,7 +44,7 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
         mutableStateOf(true)
     }
 
-    val gridItems by remember {
+    var gridItems by remember {
         mutableStateOf(
             (1..100).map {
                 ListItem(it, false)
@@ -56,13 +52,13 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
         )
     }
 
-    var result by remember {
+    var sum by remember {
         mutableStateOf(0)
     }
 
     val showButton by remember {
         derivedStateOf {
-            lazyListState.firstVisibleItemIndex > 2
+            lazyListState.firstVisibleItemIndex > 2 //position number
         }
     }
 
@@ -135,72 +131,84 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
                         .padding(16.dp)
                         .clickable {
                             display = !display
+                            if (showButton) {
+                                scope.launch {
+                                    lazyListState.animateScrollToItem(0) //position number
+                                }
+                            }
                         }
                 )
             }
         }
 
         if (!display) {
-            items(listOf(gridItems)) { items ->
-                Column(Modifier.fillMaxWidth()) {
-                    items.forEach {
-                        Box(modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp)
-                            .padding(horizontal = 8.dp)
-                            .padding(top = 16.dp)
-                            .border(1.dp, Color.Black),
+            items(gridItems.size) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp)
+                        .padding(horizontal = 8.dp)
+                        .padding(top = 16.dp)
+                        .border(1.dp, Color.Black),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Good ${gridItems[it].title}")
+                    Icon(
+                        imageVector = Icons.Default.ThumbUp,
+                        tint = if (gridItems[it].isSelected) Color.Black else Color.LightGray,
+                        contentDescription = "Like Button",
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(16.dp)
+                            .clickable {
+
+                                gridItems = gridItems.mapIndexed { index, listItem ->
+                                    if (it == index) {
+                                        listItem.copy(isSelected = !listItem.isSelected)
+                                    } else {
+                                        listItem
+                                    }
+                                }
+                                Log.d(TAG, "ScrollList: one line $gridItems")
+//                                gridItems[it].isSelected = !gridItems[it].isSelected
+                            }
+                    )
+                    sum = gridItems.size.minus(gridItems[it].title)
+                }
+            }
+        } else {
+            items(gridItems.windowed(2, 2, true)) {
+                Row(Modifier.fillMaxWidth()) {
+                    it.forEach { item ->
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxWidth(0.5f)
+                                .height(240.dp)
+                                .padding(horizontal = 8.dp)
+                                .padding(top = 16.dp)
+                                .border(1.dp, Color.Black),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "Good ${it.title}")
+                            Text(text = "Good ${item.title}")
                             Icon(
                                 imageVector = Icons.Default.ThumbUp,
-                                tint = if (it.isSelected) Color.Black else Color.LightGray,
-                                contentDescription = "Like Button",
+                                contentDescription = "$item Like Button",
+                                tint = if (item.isSelected) Color.DarkGray else Color.LightGray,
                                 modifier = Modifier
                                     .align(Alignment.BottomEnd)
                                     .padding(16.dp)
                                     .clickable {
-                                        it.isSelected = !it.isSelected
+                                        gridItems = gridItems.mapIndexed { index, listItem ->
+                                            if (gridItems.indexOf(item) == index) {
+                                                listItem.copy(isSelected = !listItem.isSelected)
+                                            } else {
+                                                listItem
+                                            }
+                                        }
                                     }
                             )
-                            result = gridItems.size.minus(it.title)
-                            Log.d(TAG, "ScrollList: ${it.title}")
-                            Log.d(TAG, "ScrollList: $result")
+                            sum = gridItems.size.minus(item.title)
                         }
-                    }
-                }
-            }
-
-        } else {
-            items(gridItems.windowed(2,1,true)) {
-                Row(Modifier.fillMaxWidth()) {
-                    it.forEach { item ->
-                    Box(
-                        modifier = Modifier
-                            .fillParentMaxWidth(0.5f)
-                            .height(240.dp)
-                            .padding(horizontal = 8.dp)
-                            .padding(top = 16.dp)
-                            .border(1.dp, Color.Black),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "Good ${item.title}")
-                        Icon(
-                            imageVector = Icons.Default.ThumbUp,
-                            contentDescription = "$item Like Button",
-                            tint = if (item.isSelected) Color.DarkGray else Color.LightGray,
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .padding(16.dp)
-                                .clickable {
-                                    item.isSelected = !item.isSelected
-                                }
-                        )
-                        result = gridItems.size.minus(item.title)
-                        Log.d(TAG, "ScrollList: ${item.title}")
-                        Log.d(TAG, "ScrollList: $result")
-                    }
                     }
                 }
             }
@@ -211,24 +219,22 @@ fun ScrollList(vm : MainViewModel, lc: LifecycleOwner) {
         enter = fadeIn(),
         exit = fadeOut()
     ) {
-        ScrollToTopButton(result,onClick = {
+        ScrollToTopButton(sum, onClick = {
             scope.launch {
-                lazyListState.animateScrollToItem(0)
-                }
+                lazyListState.animateScrollToItem(0) //position number
             }
+        }
         )
     }
 }
 
-
 @Composable
-fun ScrollToTopButton(sum: Int , onClick: () -> Unit) {
-
-
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .padding(bottom = 50.dp),
-    contentAlignment = Alignment.BottomCenter
+fun ScrollToTopButton(sum: Int, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = 36.dp),
+        contentAlignment = Alignment.BottomCenter
     ) {
         Button(
             onClick = { onClick() },
