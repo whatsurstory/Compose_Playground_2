@@ -63,6 +63,8 @@ fun ScrollList() {
         )
     }
 
+
+
     val result by remember {
         derivedStateOf {
             mutableStateOf(gridItems.size - number)
@@ -86,8 +88,7 @@ fun ScrollList() {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .padding(top = 8.dp),
+            .padding(horizontal = 8.dp),
         state = lazyListState
     ) {
         items(3, key = { it }, contentType = { it }
@@ -95,7 +96,7 @@ fun ScrollList() {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
+                    .padding(top = 16.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -135,7 +136,7 @@ fun ScrollList() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
-                    .padding(top = 8.dp)
+                    .padding(top = 16.dp)
                     .padding(horizontal = 8.dp)
                     .background(Color.LightGray)
                     .border(1.dp, Color.Black),
@@ -194,6 +195,7 @@ fun ScrollList() {
                             }
                     )
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         } else {
             items((gridItems.windowed(2, 2, true))
@@ -230,9 +232,10 @@ fun ScrollList() {
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
-        item { Spacer(modifier = Modifier.height(80.dp).fillMaxWidth()) }
+//        item { Spacer(modifier = Modifier.height(100.dp).fillMaxWidth()) }
     }
     AnimatedVisibility(
         visible = showButton,
@@ -271,7 +274,7 @@ fun ScrollToTopButton(sum : Int, onClick: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "剩餘 ${sum + 2} 項商品")
+                Text(text = "剩餘 $sum 項商品")
                 Spacer(modifier = Modifier.height(8.dp))
                 Icon(
                     imageVector = Icons.Outlined.KeyboardArrowUp,
@@ -283,7 +286,6 @@ fun ScrollToTopButton(sum : Int, onClick: () -> Unit) {
             }
         }
     }
-
 }
 
 data class ListItem(
