@@ -1,6 +1,6 @@
 package com.beva.compose_playground_2.ui
 
-import android.util.Log
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -31,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
 const val TAG = "Beva"
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ScrollList() {
@@ -47,13 +44,19 @@ fun ScrollList() {
     var gridItems by remember {
         mutableStateOf(
             (1..100).map {
-                ListItem(it, false)
+                ListItem(it , false)
             }
         )
     }
 
-    var sum by remember {
+    var number by remember {
         mutableStateOf(0)
+    }
+
+    val result by remember {
+        derivedStateOf {
+            mutableStateOf(gridItems.size - number)
+        }
     }
 
     val showButton by remember {
@@ -62,6 +65,19 @@ fun ScrollList() {
         }
     }
 
+//    LaunchedEffect(lazyListState) {
+//        snapshotFlow { lazyListState.firstVisibleItemIndex }
+//            .map { index ->
+//                index > 0
+//            }
+//            .distinctUntilChanged()
+//            .filter {
+//                it
+//            }
+//            .collect {
+//                Log.d(TAG, "ScrollList: $it")
+//            }
+//    }
 
     LazyColumn(
         modifier = Modifier
@@ -70,7 +86,8 @@ fun ScrollList() {
             .padding(top = 8.dp),
         state = lazyListState
     ) {
-        items(3) {
+        items(3, key = { it }, contentType = { it }
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -142,7 +159,8 @@ fun ScrollList() {
         }
 
         if (!display) {
-            items(gridItems.size) {
+            items(gridItems.size
+            ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -169,15 +187,15 @@ fun ScrollList() {
                                         listItem
                                     }
                                 }
-                                Log.d(TAG, "ScrollList: one line $gridItems")
-//                                gridItems[it].isSelected = !gridItems[it].isSelected
                             }
                     )
-                    sum = gridItems.size.minus(gridItems[it].title)
+                    number = gridItems[it].title
+//                    sum.value = gridItems.size.minus(gridItems[it].title)
                 }
             }
         } else {
-            items(gridItems.windowed(2, 2, true)) {
+            items((gridItems.windowed(2, 2, true))
+            ) {
                 Row(Modifier.fillMaxWidth()) {
                     it.forEach { item ->
                         Box(
@@ -207,7 +225,8 @@ fun ScrollList() {
                                         }
                                     }
                             )
-                            sum = gridItems.size.minus(item.title)
+                            number = item.title
+//                            sum.value = gridItems.size.minus(item.title)
                         }
                     }
                 }
@@ -219,7 +238,7 @@ fun ScrollList() {
         enter = fadeIn(),
         exit = fadeOut()
     ) {
-        ScrollToTopButton(sum, onClick = {
+        ScrollToTopButton(result.value, onClick = {
             scope.launch {
                 lazyListState.animateScrollToItem(0) //position number
             }
@@ -229,24 +248,22 @@ fun ScrollList() {
 }
 
 @Composable
-fun ScrollToTopButton(sum: Int, onClick: () -> Unit) {
+fun ScrollToTopButton(sum : Int, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(bottom = 36.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
-        Button(
-            onClick = { onClick() },
+        Row(
             modifier = Modifier
                 .shadow(10.dp)
                 .clip(RectangleShape)
                 .size(160.dp, 90.dp)
-                .border(1.dp, Color.Black),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color.Gray,
-                contentColor = Color.Black
-            )
+                .border(1.dp, Color.Black)
+                .background(Color.LightGray),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
             Column(
                 verticalArrangement = Arrangement.Center,
@@ -257,7 +274,10 @@ fun ScrollToTopButton(sum: Int, onClick: () -> Unit) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Icon(
                     imageVector = Icons.Outlined.KeyboardArrowUp,
-                    contentDescription = "Back To Top"
+                    contentDescription = "Back To Top",
+                    modifier = Modifier.clickable {
+                        onClick()
+                    }
                 )
             }
         }

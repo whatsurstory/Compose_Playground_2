@@ -12,9 +12,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Compose_Playground_2Theme {
-
                     ScrollList()
-
             }
         }
     }
