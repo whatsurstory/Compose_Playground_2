@@ -1,6 +1,7 @@
 package com.beva.compose_playground_2.ui
 
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,12 +29,25 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
+
 const val TAG = "Beva"
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ScrollList() {
 
     val lazyListState = rememberLazyListState()
+
+    var number by remember {
+        mutableStateOf(0)
+    }
+
+    LaunchedEffect(lazyListState) {
+        snapshotFlow { lazyListState.firstVisibleItemIndex}
+            .collect {
+                number = it
+                Log.d(TAG, "ScrollList: number $number")
+            }
+    }
 
     val scope = rememberCoroutineScope()
 
@@ -49,15 +63,18 @@ fun ScrollList() {
         )
     }
 
-    var number by remember {
-        mutableStateOf(0)
-    }
-
     val result by remember {
         derivedStateOf {
             mutableStateOf(gridItems.size - number)
         }
     }
+
+    val result2 by remember {
+        derivedStateOf {
+            mutableStateOf(gridItems.size - (number * 2))
+        }
+    }
+
 
     val showButton by remember {
         derivedStateOf {
@@ -65,19 +82,6 @@ fun ScrollList() {
         }
     }
 
-//    LaunchedEffect(lazyListState) {
-//        snapshotFlow { lazyListState.firstVisibleItemIndex }
-//            .map { index ->
-//                index > 0
-//            }
-//            .distinctUntilChanged()
-//            .filter {
-//                it
-//            }
-//            .collect {
-//                Log.d(TAG, "ScrollList: $it")
-//            }
-//    }
 
     LazyColumn(
         modifier = Modifier
@@ -164,7 +168,7 @@ fun ScrollList() {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(140.dp)
+                        .height(240.dp)
                         .padding(horizontal = 8.dp)
                         .padding(top = 16.dp)
                         .border(1.dp, Color.Black),
@@ -189,8 +193,6 @@ fun ScrollList() {
                                 }
                             }
                     )
-                    number = gridItems[it].title
-//                    sum.value = gridItems.size.minus(gridItems[it].title)
                 }
             }
         } else {
@@ -225,20 +227,19 @@ fun ScrollList() {
                                         }
                                     }
                             )
-                            number = item.title
-//                            sum.value = gridItems.size.minus(item.title)
                         }
                     }
                 }
             }
         }
+        item { Spacer(modifier = Modifier.height(80.dp).fillMaxWidth()) }
     }
     AnimatedVisibility(
         visible = showButton,
         enter = fadeIn(),
         exit = fadeOut()
     ) {
-        ScrollToTopButton(result.value, onClick = {
+        ScrollToTopButton(if (display) result2.value else result.value, onClick = {
             scope.launch {
                 lazyListState.animateScrollToItem(0) //position number
             }
@@ -270,7 +271,7 @@ fun ScrollToTopButton(sum : Int, onClick: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "剩餘 $sum 項商品")
+                Text(text = "剩餘 ${sum + 2} 項商品")
                 Spacer(modifier = Modifier.height(8.dp))
                 Icon(
                     imageVector = Icons.Outlined.KeyboardArrowUp,
