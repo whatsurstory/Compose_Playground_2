@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 
 
 const val TAG = "Beva"
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ScrollList() {
@@ -42,7 +43,7 @@ fun ScrollList() {
     }
 
     LaunchedEffect(lazyListState) {
-        snapshotFlow { lazyListState.firstVisibleItemIndex}
+        snapshotFlow { lazyListState.firstVisibleItemIndex }
             .collect {
                 number = it
                 Log.d(TAG, "ScrollList: number $number")
@@ -58,12 +59,10 @@ fun ScrollList() {
     var gridItems by remember {
         mutableStateOf(
             (1..100).map {
-                ListItem(it , false)
+                ListItem(it, false)
             }
         )
     }
-
-
 
     val result by remember {
         derivedStateOf {
@@ -83,7 +82,6 @@ fun ScrollList() {
             lazyListState.firstVisibleItemIndex > 2 //position number
         }
     }
-
 
     LazyColumn(
         modifier = Modifier
@@ -164,7 +162,8 @@ fun ScrollList() {
         }
 
         if (!display) {
-            items(gridItems.size
+            items(
+                gridItems.size
             ) {
                 Box(
                     modifier = Modifier
@@ -198,7 +197,8 @@ fun ScrollList() {
                 Spacer(modifier = Modifier.height(16.dp))
             }
         } else {
-            items((gridItems.windowed(2, 2, true))
+            items(
+                (gridItems.windowed(2, 2, true))
             ) {
                 Row(Modifier.fillMaxWidth()) {
                     it.forEach { item ->
@@ -234,7 +234,7 @@ fun ScrollList() {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
-        } 
+        }
     }
     AnimatedVisibility(
         visible = showButton,
@@ -245,13 +245,12 @@ fun ScrollList() {
             scope.launch {
                 lazyListState.animateScrollToItem(0) //position number
             }
-        }
-        )
+        })
     }
 }
 
 @Composable
-fun ScrollToTopButton(sum : Int, onClick: () -> Unit) {
+fun ScrollToTopButton(sum: Int, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
